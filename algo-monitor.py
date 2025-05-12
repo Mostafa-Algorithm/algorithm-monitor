@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 from algorithm.colors import *
 from algorithm.banners import make_banner
-from algorithm.os import get_user_permission, os
+from algorithm.os import get_user_permission, os, subprocess
 from algorithm.loading import Loading, LoadingStyle
 from datetime import datetime
 from collections import defaultdict, deque
@@ -22,25 +22,29 @@ class Notification:
     self.notification_timeout = 5000
 
   def check_gui_environment(self):
-    """More robust GUI environment detection"""
-    dbus_attempts = [
-      f'unix:path=/run/user/{os.getuid()}/bus',
-      'unix:path=/var/run/dbus/system_bus_socket',
-      'unix:abstract=/tmp/dbus-XXXXXXXXXX',
-      'tcp:host=localhost,port=12434'
-    ]
-
-    for attempt in dbus_attempts:
-      try:
-        os.environ['DBUS_SESSION_BUS_ADDRESS'] = attempt
-        import dbus
-        bus = dbus.SessionBus() if 'session' in attempt else dbus.SystemBus()
-        bus.list_names()  # Test connection
-        notify2.init(self.app_name)
+    """Check if the system has a GUI environment"""
+    try:
+      # Check for common display managers
+      if os.getenv('DISPLAY'):
         return True
-      except Exception as e:
-        pass
-
+      if subprocess.run(['pgrep', '-x', 'Xorg'], stdout=subprocess.PIPE).returncode == 0:
+        return True
+      if subprocess.run(['pgrep', '-x', 'gnome-session'], stdout=subprocess.PIPE).returncode == 0:
+        return True
+      if subprocess.run(['pgrep', '-x', 'xfce4-session'], stdout=subprocess.PIPE).returncode == 0:
+        return True
+      if subprocess.run(['pgrep', '-x', 'kwin_x11'], stdout=subprocess.PIPE).returncode == 0:
+        return True
+      if subprocess.run(['pgrep', '-x', 'mate-session'], stdout=subprocess.PIPE).returncode == 0:
+        return True
+      if subprocess.run(['pgrep', '-x', 'cinnamon-session'], stdout=subprocess.PIPE).returncode == 0:
+        return True
+      if subprocess.run(['pgrep', '-x', 'lxqt-session'], stdout=subprocess.PIPE).returncode == 0:
+        return True
+      if subprocess.run(['pgrep', '-x', 'deepin-session'], stdout=subprocess.PIPE).returncode == 0:
+        return True
+    except:
+      pass
     return False
 
   def show_notification(self, message, level, pid=None):

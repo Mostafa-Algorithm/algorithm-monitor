@@ -67,7 +67,7 @@ AlgoMonitor is an enterprise-grade security monitoring solution that provides re
    ```
 4. **Show service logs**
    ```bash
-   sudo journalctl -u algo-monitor -f                                                                                                                                                                 
+   sudo journalctl -u algo-monitor -f
    ```
    
 ## Configuration
@@ -235,5 +235,5 @@ sudo systemctl restart algo-monitor
   ██║░░██║███████╗╚██████╔╝╚█████╔╝██║░░██║██║░░░██║░░░██║░░██║██║░╚═╝░██║
   ╚═╝░░╚═╝╚══════╝░╚═════╝░░╚════╝░╚═╝░░╚═╝╚═╝░░░╚═╝░░░╚═╝░░╚═╝╚═╝░░░░░╚═╝
 
-Developed with ❤️ by Mostafa Algorithm
-AI Assistance provided by DeepSeek
+Developed with ❤️ by [Mostafa Algorithm](https://www.linkedin.com/in/mostafa-atef-algorithm/)
+AI Assistance provided by [DeepSeek](https://chat.deepseek.com/)

@@ -64,11 +64,6 @@ check_python_lib() {
 
 # Main installation
 main() {
-  # Verify Python libraries before proceeding
-  if ! check_python_lib; then
-    exit 1
-  fi
-
   # Install system dependencies
   status_msg "Installing system dependencies..."
   if command -v apt-get >/dev/null; then
@@ -81,6 +76,11 @@ main() {
     zypper install -y python3-gobject python3-dbus libnotify4
   else
     error_msg "Could not detect package manager. You may need to install dependencies manually."
+  fi
+
+  # Verify Python libraries before proceeding
+  if ! check_python_lib; then
+    exit 1
   fi
 
   # Create secure installation directory

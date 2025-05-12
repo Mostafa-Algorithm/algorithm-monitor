@@ -234,6 +234,6 @@ sudo systemctl restart algo-monitor
   ██╔══██║██║░░░░░██║░░╚██╗██║░░██║██╔══██╗██║░░░██║░░░██╔══██║██║╚██╔╝██║
   ██║░░██║███████╗╚██████╔╝╚█████╔╝██║░░██║██║░░░██║░░░██║░░██║██║░╚═╝░██║
   ╚═╝░░╚═╝╚══════╝░╚═════╝░░╚════╝░╚═╝░░╚═╝╚═╝░░░╚═╝░░░╚═╝░░╚═╝╚═╝░░░░░╚═╝
-
+```
 Developed with ❤️ by [Mostafa Algorithm](https://www.linkedin.com/in/mostafa-atef-algorithm/)
 AI Assistance provided by [DeepSeek](https://chat.deepseek.com/)

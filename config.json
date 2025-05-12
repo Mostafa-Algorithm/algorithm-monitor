@@ -27,7 +27,8 @@
     "brave", "thunderbird", "libreoffice", "vlc", "spotify", "code", "pycharm", "terminato", "gedit", "sublime_text",
     "apt", "apt-get", "dpkg", "yum", "dnf", "pacman", "zyppe", "snapd", "flatpak", "gnome-software", "dnf-automatic",
     "dockerd", "containerd", "libvirtd", "virt-manage", "qemu", "vboxwebsrv", "git", "python", "python3", "tcsh",
-    "node", "npm", "java", "ruby", "perl", "bash", "zsh", "fish", "sh", "dash", "postgres", "mysqld", "mongod"
+    "node", "npm", "java", "ruby", "perl", "bash", "zsh", "fish", "sh", "dash", "postgres", "mysqld", "mongod",
+    "whatsapp-linux-desktop"
   ],
   "PROTECTED_DIRECTORIES": [
     "/bin/", "/sbin/", "/usr/bin/", "/usr/sbin/", "/usr/local/bin/", "/etc/", "/root/", "/var/log/", "/opt/",

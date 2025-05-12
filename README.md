@@ -1,5 +1,7 @@
 # AlgoMonitor - Advanced System Security Monitoring Service
 
+![AlgoMonitor](https://lh3.googleusercontent.com/fife/ALs6j_E0bj4uWYOowlgJDthrzxgXYyVHCx6wLr4Vbf3KMReVw-CW0GDX4cbepiyVS0yevmqYQl9k5KJo8_9rki8G17LOu_gIZmdJz9a-y-ycXNw-ngNGRAhCXQVeDVVvPVJSyMzUzovDLPLMvLOdGGOCGL13t2YHOU7SVBMnxuscI4ML0fuwCYrL5_MfsvDUqu9ZMt41GP8SfHAJK71S5cclBDevWXFDDfM3KZCxBXAp8fzMXVdbAP7yed_bB7Bm8c7rPwts5xwvvTIXfcqGrZiYrazTbzLUN0lIzWbYjyOZiuC9kXiEvTTMcI7Ft7CDcdwk8--Xhdm2EZKvQf7MIrodu-z-UWbeeJnGu2RSytoIJUYFGZs9UOtepYPkAS2wK_dZeNRflFB2B5SUFIg6C5BtADuTFB1Kw_pjZechfhOlsjJjJ6gdBVSwPl5bmb0GI0e0DbPyZQNSPDcflVT2qHbruYyqRJ-2nTWZF6k6QuUJXkGMMjwv2xeJjjGxIDOjcDqGmBDVa86CN_HsHgYkStin4qQHEQN0UD26tgrtOQEoK1T4zqT78WFIUeHiqsSCvqtXhdz26FcssG1qUz-Zj7coQVcDzcMudodi6X-PgQJA3T-5g2RRvTvdQVWKbfIVlVRwlAsquaD1FiIyMhyK0GRG_u3gEYpWWgynTtCNnVtiGuaIobW49F9zgATf9NKIFYcUIlkHUjRs0HK9evZ1kvAFBDYzxyMJ50ZtdXC-70dZ5LE5wtYfrNvyGPTni2EIbzQ-efeW4kHvHMyEbBUQ7XxO11MhNBSWh0IrivGTFSU6pZ48WfMIIUaau-_mLG-eiC1eptzzHzEupsiGnjee7y2dT6gccsWSE-XbR8eAUvgvfCe0J3ycYUvey0mmDvcePKcN0M0qa4FrVpqkWt6NtpvJmH6tlqD4rMGKsM2gQJDcWLm068M88-h7yOKZIg69RHjRNt-_M5z_2sjjfEiEpAWn1D-4Iag1MbqrVmms3v3vxEX5aQ8qD-yhkJxSfVZ852VaWAvnIDzY5vLR5xvwrSmw72urb3oewX_EEMr_aoGAI6vduhu7-5zyJODpkJJ9gh69pjBZcXCskQtTkRBfYbQAGFSgXAsQKhy0a8ZRlYh-RVE0dJiAJ_kaRKlbOr0QKM6XcvQ26gipp_ZtXGcKrpLaeV_Bco50IinZjjt-nc6hOYsf1mQP9DMwVwvwi6_xyHO2R-WrEwh8_n8Fbp_1WjzhQp83zwJB7jlEhcJ1g4PskM93aPI5FiW8YWq7zQMiZWqweLbgaLTvybMXgVyn7QfjdNkpMry_HwygsNF3F-NdPZ1IJK_r_FRK9Cxz6O17st-oJysjm0JMsKA--yYx_lxl07nwhsUwMeLWnLfxqOO6_9gCb5dh8uIv2VF4L3SuBJirA91RXMnpGAYsnONxFCYQuhTiMXkNHhrJYODi7ED9IX4u4G9n4iYQD9XsayUnMy0ANWpvSvaUZF3QstkeueOdJzajCUvUqtGK9oz2F9GiPE3TxbxUHf8-YtK9BQc92LNAxl4yXLnmVPcGqrg8NQ8DTso5w3a4WVGrS2GfccpWti6Ce9KmWPus1m9eqR1YVupDaybEndauSrlfG73MaSMVNvfKGUjdNtbaGpwomtKAWUZWGfMnTjpW1MUVd6M=w1357-h949?auditContext=prefetch)
+
 ## Overview
 
 AlgoMonitor is an enterprise-grade security monitoring solution that provides real-time protection for Linux systems by monitoring processes, network activity, filesystem changes, and user sessions. It actively detects and mitigates potential threats using behavioral analysis and pattern matching.
@@ -13,8 +15,8 @@ AlgoMonitor is an enterprise-grade security monitoring solution that provides re
 5. [Service Management](#service-management)
 6. [Monitoring Components](#monitoring-components)
 7. [Alert Types](#alert-types)
-8. [Troubleshooting](#troubleshooting)
-9. [Uninstallation](#uninstallation)
+8. [Troubleshooting Guide](#troubleshooting-guide)
+9. [Uninstallation Procedure](#uninstallation-procedure)
 10. [Important Notes](#important-notes)
 
 ## Key Features
@@ -54,12 +56,12 @@ AlgoMonitor is an enterprise-grade security monitoring solution that provides re
 
 1. **Download the package**:
    ```bash
-   git clone https://github.com/your-repo/algo-monitor.git
-   cd algo-monitor
+   git clone https://github.com/Mostafa-Algorithm/algorithm-monitor.git
+   cd algorithm-monitor
    ```
 2. **Run the installer:**
    ```bash
-   sudo ./install.sh
+   sudo ./install
    ```
 3. **Verify installation:**
    ```bash
@@ -203,7 +205,7 @@ sudo cat /opt/.monitor/logs/alert.log
 
 Complete removal command:
 ```bash
-sudo ./uninstall.sh
+sudo ./uninstall
 ```
 
 ## Important Notes

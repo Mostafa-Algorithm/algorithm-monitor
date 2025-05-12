@@ -1,0 +1,57 @@
+#!/bin/bash
+set -e
+
+# Colors
+BLUE='\033[1;34m'
+GREEN='\033[1;32m'
+RED='\033[1;31m'
+NC='\033[0m' # No Color
+
+# Function to display status messages
+status_msg() {
+  echo -e "${BLUE}[*] $1${NC}"
+}
+
+success_msg() {
+  echo -e "${GREEN}[+] $1${NC}"
+}
+
+error_msg() {
+  echo -e "${RED}[-] $1${NC}"
+}
+
+# Check root
+if [ "$(id -u)" -ne 0 ]; then
+  error_msg "Must be run as root"
+  exit 1
+fi
+
+# Configuration
+APP_NAME="algo-monitor"
+INSTALL_DIR="/opt/.monitor"
+SERVICE_FILE="/etc/systemd/system/${APP_NAME}.service"
+BIN_SYMLINK="/usr/local/bin/${APP_NAME}"
+
+# Main uninstallation
+main() {
+  # Stop and disable service
+  status_msg "Stopping service..."
+  systemctl stop "$APP_NAME" 2>/dev/null || true
+  systemctl disable "$APP_NAME" 2>/dev/null || true
+
+  # Remove service file
+  status_msg "Removing service..."
+  rm -f "$SERVICE_FILE"
+  systemctl daemon-reload
+  systemctl reset-failed
+
+  # Remove installation
+  status_msg "Removing files..."
+  rm -rf "$INSTALL_DIR"
+  rm -f "$BIN_SYMLINK"
+
+  success_msg "Uninstallation complete!"
+  echo -e "All components have been removed from your system"
+}
+
+main

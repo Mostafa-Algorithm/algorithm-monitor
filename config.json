@@ -1,0 +1,67 @@
+{
+  "TRUSTED_PORTS": {
+    "22": "SSH",
+    "53": "DNS",
+    "80": "HTTP",
+    "139": "NetBIOS",
+    "443": "HTTPS",
+    "445": "SMB",
+    "631": "CUPS",
+    "1433": "MS SQL",
+    "1521": "Oracle DB",
+    "3306": "MySQL",
+    "5432": "PostgreSQL",
+    "8080": "HTTP Alt",
+    "8443": "HTTPS Alt",
+    "27017": "MongoDB"
+  },
+  "TRUSTED_SYSTEM_PROCESSES": [
+    "systemd", "init", "kthreadd", "ksoftirqd", "rcu_sched", "migration", "watchdog", "kworke", "kcompactd",
+    "kswapd", "oom_reape", "khugepaged", "dbus-daemon", "NetworkManage", "avahi-daemon", "cron", "syslog-ng",
+    "rsyslogd", "systemd-logind", "systemd-udevd", "polkitd", "accounts-daemon", "sshd", "fail2ban", "firewalld",
+    "ufw", "gpg-agent", "pcscd", "acpid", "lm-sensors", "smartd", "upowerd", "thermald", "irqbalance", "ntpd",
+    "wpa_supplicant", "dhclient", "dnsmasq", "hostapd", "chronyd", "openvpn", "nordvpnd", "openconnect", "github-desktop",
+    "wireguard", "udisksd", "lvmetad", "lvm2-monito", "mdadm", "fstrim", "pulseaudio", "pipewire", "wireplumbe",
+    "alsa", "gdm", "gdm3", "lightdm", "sddm", "xdm", "slim", "gnome-shell", "xfce4", "xfwm4", "xfdesktop", "kwin_x11",
+    "xfsettingsd", "kwin_wayland", "mate-session", "cinnamon-session", "budgie-wm", "firefox", "chrome", "chromium",
+    "brave", "thunderbird", "libreoffice", "vlc", "spotify", "code", "pycharm", "terminato", "gedit", "sublime_text",
+    "apt", "apt-get", "dpkg", "yum", "dnf", "pacman", "zyppe", "snapd", "flatpak", "gnome-software", "dnf-automatic",
+    "dockerd", "containerd", "libvirtd", "virt-manage", "qemu", "vboxwebsrv", "git", "python", "python3", "tcsh",
+    "node", "npm", "java", "ruby", "perl", "bash", "zsh", "fish", "sh", "dash", "postgres", "mysqld", "mongod"
+  ],
+  "PROTECTED_DIRECTORIES": [
+    "/bin/", "/sbin/", "/usr/bin/", "/usr/sbin/", "/usr/local/bin/", "/etc/", "/root/", "/var/log/", "/opt/",
+    "/boot/", "/lib/", "/lib64/", "/usr/lib/", "/usr/lib64/", "/usr/local/lib/", "/usr/local/lib64/", "/usr/share/",
+    "/usr/local/share/", "/var/lib/", "/var/www/", "/home/*/.ssh/", "/home/*/.gnupg/", "/home/*/.config/"
+  ],
+  "PROCESS_THRESHOLDS": {
+    "cpu_percent": 80,
+    "memory_percent": 70,
+    "children": 15,
+    "connections": 25,
+    "file_handles": 1000,
+    "threads": 100
+  },
+  "SUSPICIOUS_PATTERNS": [
+    "\\.sh$", "\\.py$", "\\.pl$", "\\.rb$", "\\.exe$", "\\.appimage$", "^[0-9a-f]{32}$", "^[0-9a-f]{64}$",
+    "reverse_?shell", "bind_?shell", "meterprete", "backdoo", "mine", "cryptomine", "xmrig", "cpumine", "minerd",
+    "nc\\.?at", "socat", "telnet", "rsh", "rexec", "sshpass", "keylogge", "sniffe", "rootkit", "kworker/\\d+/[0-9a-f]+",
+    "\\.encrypted$", "\\.locked$", "\\.crypt$", "\\.ransom$", "\\.malware$", "\\.trojan$", "\\.virus$", "\\.worm$",
+    "\\/tmp\/[a-z0-9]{10}", "\\/dev\/shm\/[a-z0-9]{10}", "\\/var\/tmp\/[a-z0-9]{10}", "\\/run\/user\/\\d+\/[a-z0-9]{10}"
+  ],
+  "SUSPICIOUS_NETWORK_PATTERNS": [
+    "\\.onion$", "^45\\..*", "^62\\..*", "^77\\..*", "^93\\..*", "^192\\.99\\..*", "^185\\.161\\..*",
+    ":4444$", ":5555$", ":6666$", ":7777$", ":8888$", ":9999$", ":1337$", ":31337$", ":12345$", ":54321$",
+    "\\.ddns\\.net$", "\\.no-ip\\.org$", "\\.dyn\\.com$", "^10\\.", "^172\\.(1[6-9]|2[0-9]|3[0-1])\\.", "^192\\.168\\."
+  ],
+  "REVERSE_SHELL_INDICATORS": [
+    "bash -i", "/bin/bash -i", "/bin/sh -i", "python -c", "perl -e", "nc -e /bin/sh", "ncat -e /bin/sh",
+    "socat exec:", "php -", "sh -i", "ruby -rsocket", "lua -e", "rm /tmp/f;mkfifo /tmp/f", "mknod /tmp/backpipe p",
+    "zsh -c", "powershell -nop -c", "awk 'BEGIN {system(\"/bin/sh\")}'", "expect -c 'spawn /bin/sh;interact'",
+    "telnet <IP> <PORT> | /bin/sh", "curl <URL> | sh", "wget -qO- <URL> | sh"
+  ],
+  "CRYPTOMINING_POOLS": [
+    "xmrpool.eu", "minexmr.com", "nanopool.org", "supportxmr.com", "monerohash.com", "cryptonight.net",
+    "etn.fairhash.org", "eth-eu1.nanopool.org", "asia1.ethermine.org", "us1.ethermine.org"
+  ]
+}

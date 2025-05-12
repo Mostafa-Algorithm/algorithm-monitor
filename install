@@ -1,0 +1,163 @@
+#!/bin/bash
+set -e
+
+# Colors
+BLUE='\033[1;34m'
+GREEN='\033[1;32m'
+RED='\033[1;31m'
+NC='\033[0m' # No Color
+
+# Function to display status messages
+status_msg() {
+  echo -e "${BLUE}[*] $1${NC}"
+}
+
+success_msg() {
+  echo -e "${GREEN}[+] $1${NC}"
+}
+
+error_msg() {
+  echo -e "${RED}[-] $1${NC}"
+}
+
+# Check root
+if [ "$(id -u)" -ne 0 ]; then
+  error_msg "Must be run as root"
+  exit 1
+fi
+
+# Configuration
+INSTALL_DIR="/opt/.monitor"
+SERVICE_NAME="algo-monitor"
+SERVICE_FILE="/etc/systemd/system/${SERVICE_NAME}.service"
+BIN_SYMLINK="/usr/local/bin/${SERVICE_NAME}"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+LOG_DIR="${INSTALL_DIR}/logs"
+
+# Function to check Python library
+check_python_lib() {
+  status_msg "Checking for Python dependencies..."
+
+  if ! python3 -c "import algorithm" &>/dev/null; then
+    error_msg "Algorithm library not found in Python path"
+    echo -e "Please install it from GitHub with:"
+    echo -e "  sudo pip3 install git+https://github.com/Mostafa-Algorithm/algorithm-lib.git"
+    return 1
+  fi
+
+  if ! python3 -c "import psutil" &>/dev/null; then
+    error_msg "psutil library not found in Python path"
+    echo -e "Please install it manually with:"
+    echo -e "  sudo pip3 install psutil"
+    return 1
+  fi
+
+  if ! python3 -c "import notify2" &>/dev/null; then
+    error_msg "Notify2 library not found in Python path"
+    echo -e "Please install it manually with:"
+    echo -e "  sudo pip3 install notify2"
+    return 1
+  fi
+
+  return 0
+}
+
+# Main installation
+main() {
+  # Verify Python libraries before proceeding
+  if ! check_python_lib; then
+    exit 1
+  fi
+
+  # Install system dependencies
+  status_msg "Installing system dependencies..."
+  if command -v apt-get >/dev/null; then
+    apt-get update && apt-get install -y python3-gi python3-dbus libnotify4 gir1.2-notify-0.7
+  elif command -v pacman >/dev/null; then
+    pacman -Syu --noconfirm python-gobject libnotify
+  elif command -v dnf >/dev/null; then
+    dnf install -y python3-gobject dbus-python libnotify
+  elif command -v zypper >/dev/null; then
+    zypper install -y python3-gobject python3-dbus libnotify4
+  else
+    error_msg "Could not detect package manager. You may need to install dependencies manually."
+  fi
+
+  # Create secure installation directory
+  status_msg "Setting up directories..."
+  mkdir -p "$INSTALL_DIR"
+  mkdir -p "$LOG_DIR"
+  chmod 700 "$INSTALL_DIR" "$LOG_DIR"
+  chown root:root "$INSTALL_DIR" "$LOG_DIR"
+
+  # Copy files
+  status_msg "Installing files..."
+  cp "${SCRIPT_DIR}/${SERVICE_NAME}.py" "$INSTALL_DIR/"
+  cp "${SCRIPT_DIR}/config.json" "$INSTALL_DIR/"
+  chmod 700 "$INSTALL_DIR/${SERVICE_NAME}.py" "$INSTALL_DIR/config.json"
+  chown root:root "$INSTALL_DIR/${SERVICE_NAME}.py" "$INSTALL_DIR/config.json"
+
+  # Create systemd service
+  status_msg "Configuring systemd service..."
+  cat > "$SERVICE_FILE" <<EOF
+[Unit]
+Description=AlgoMonitor Security Service
+After=network.target
+StartLimitIntervalSec=60
+StartLimitBurst=5
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=$INSTALL_DIR
+ExecStart=/usr/bin/python3 $INSTALL_DIR/${SERVICE_NAME}.py
+Restart=always
+RestartSec=5
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+ProtectHome=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictNamespaces=true
+RestrictRealtime=true
+SystemCallArchitectures=native
+MemoryDenyWriteExecute=true
+LockPersonality=true
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+  # Create symlink
+  status_msg "Creating symlink..."
+  ln -sf "$INSTALL_DIR/${SERVICE_NAME}.py" "$BIN_SYMLINK"
+  chmod 755 "$BIN_SYMLINK"
+
+  # Enable and start service
+  status_msg "Starting service..."
+  systemctl daemon-reload
+  systemctl enable --now "$SERVICE_NAME"
+  systemctl restart --now "$SERVICE_NAME"
+
+  # Verify service is running
+  if ! systemctl is-active --quiet "$SERVICE_NAME"; then
+    error_msg "Service failed to start"
+    journalctl -u "$SERVICE_NAME" -b --no-pager
+    exit 1
+  fi
+
+  success_msg "Installation complete!"
+  echo -e "Service is running as root"
+  echo -e "Logs are stored in: $LOG_DIR"
+  echo -e "\nYou can control the service with:"
+  echo -e "  sudo systemctl start|stop|restart|status $SERVICE_NAME"
+  echo -e "  sudo journalctl -u $SERVICE_NAME -f"
+
+  echo -e "\n${RED}IMPORTANT:${NC} This service actively monitors and terminates suspicious activities."
+  echo -e "If legitimate programs are being blocked, add them to:"
+  echo -e "  /opt/.monitor/config.json"
+}
+
+main

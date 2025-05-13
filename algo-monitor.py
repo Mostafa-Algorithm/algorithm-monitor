@@ -11,7 +11,7 @@ import psutil, atexit, time, re, json, hashlib, threading, notify2
 CONFIG_FILE = "/opt/.monitor/config.json"
 LOG_DIR = "/opt/.monitor/logs/"
 MAX_LOG_SIZE = 10 * 1024 * 1024  # 10MB
-LOG_RETENTION_DAYS = 30
+LOG_RETENTION_DAYS = 30 * 24 * 60 * 60  # 30 Days
 
 
 class Notification:
@@ -19,32 +19,23 @@ class Notification:
     self.app_name = app_name
     self.has_gui = self.check_gui_environment()
     self.active_notifications = {}
-    self.notification_timeout = 5000
+    self.notification_timeout = 5000  # milliseconds
 
-  def check_gui_environment(self):
+  @staticmethod
+  def check_gui_environment():
     """Check if the system has a GUI environment"""
     try:
-      # Check for common display managers
       if os.getenv('DISPLAY'):
         return True
-      if subprocess.run(['pgrep', '-x', 'Xorg'], stdout=subprocess.PIPE).returncode == 0:
-        return True
-      if subprocess.run(['pgrep', '-x', 'gnome-session'], stdout=subprocess.PIPE).returncode == 0:
-        return True
-      if subprocess.run(['pgrep', '-x', 'xfce4-session'], stdout=subprocess.PIPE).returncode == 0:
-        return True
-      if subprocess.run(['pgrep', '-x', 'kwin_x11'], stdout=subprocess.PIPE).returncode == 0:
-        return True
-      if subprocess.run(['pgrep', '-x', 'mate-session'], stdout=subprocess.PIPE).returncode == 0:
-        return True
-      if subprocess.run(['pgrep', '-x', 'cinnamon-session'], stdout=subprocess.PIPE).returncode == 0:
-        return True
-      if subprocess.run(['pgrep', '-x', 'lxqt-session'], stdout=subprocess.PIPE).returncode == 0:
-        return True
-      if subprocess.run(['pgrep', '-x', 'deepin-session'], stdout=subprocess.PIPE).returncode == 0:
-        return True
-    except:
-      pass
+      sessions = [
+        'Xorg', 'gnome-session', 'xfce4-session', 'kwin_x11',
+        'mate-session', 'cinnamon-session', 'lxqt-session', 'deepin-session'
+      ]
+      for session in sessions:
+        if subprocess.run(['pgrep', '-x', session], stdout=subprocess.PIPE).returncode == 0:
+          return True
+    except Exception as e:
+      print(f"[ERROR] GUI check failed: {e}")
     return False
 
   def show_notification(self, message, level, pid=None):
@@ -53,33 +44,42 @@ class Notification:
       return
 
     try:
-      if pid in self.active_notifications:
+      notify2.init(self.app_name)
+    except Exception as e:
+      print(f"[ERROR] Failed to initialize notify2: {e}")
+      return
+
+    try:
+      if pid and pid in self.active_notifications:
         self._close_notification(pid)
 
       icon = {
-          "ALERT": "dialog-warning",
-          "WARNING": "security-high",
-          "ERROR": "dialog-error"
-        }.get(level, "dialog-information")
+        "ALERT": "dialog-warning",
+        "WARNING": "security-high",
+        "ERROR": "dialog-error",
+        "INFO": "dialog-information"
+      }.get(level.upper(), "dialog-information")
 
-      notification = notify2.Notification(f"{self.app_name} {level.title()}", message, icon)
+      notification = notify2.Notification(f"{self.app_name} - {level.title()}", message, icon)
+      notification.set_timeout(self.notification_timeout)
       notification.show()
-      self.active_notifications[pid] = notification
+
+      if pid:
+        self.active_notifications[pid] = notification
+
     except Exception as e:
-      self.has_gui = False
-      print(f"[ERROR] Notification: {e}")
+      print(f"[ERROR] Notification failed: {e}")
 
   def _close_notification(self, pid):
     """Close and cleanup notification"""
-    if pid in self.active_notifications:
-      try:
-        notification = self.active_notifications[pid]
-        if hasattr(notification, 'close'):
-          notification.close()
-      except:
-        pass
-      finally:
-        del self.active_notifications[pid]
+    try:
+      notification = self.active_notifications.get(pid)
+      if notification and hasattr(notification, 'close'):
+        notification.close()
+    except:
+      pass
+    finally:
+      del self.active_notifications[pid]
 
   def cleanup(self):
     """Cleanup all active notifications"""
@@ -87,18 +87,15 @@ class Notification:
       self._close_notification(pid)
 
 
-class AlgoMonitor:
+class SystemMonitor:
   def __init__(self):
     self.config = self.load_config()
     self.known_ports = set()
     self.known_procs = set()
     self.known_connections = set()
     self.known_files = set()
-    self.trusted_processes = set(self.config['TRUSTED_SYSTEM_PROCESSES'])
-    self.trusted_ports = set(self.config['TRUSTED_PORTS'].keys())
-    self.reverse_shell_indicators = set(self.config['REVERSE_SHELL_INDICATORS'])
-    self.suspicious_patterns = [re.compile(p, re.IGNORECASE) for p in self.config['SUSPICIOUS_PATTERNS']]
-    self.suspicious_network_patterns = [re.compile(p, re.IGNORECASE) for p in self.config['SUSPICIOUS_NETWORK_PATTERNS']]
+    self.suspicious_network_patterns = \
+      [re.compile(p, re.IGNORECASE) for p in self.config['SUSPICIOUS_NETWORK_PATTERNS']]
     self.process_behavior = defaultdict(deque)
     self.network_behavior = defaultdict(deque)
     self.file_hashes = {}
@@ -123,8 +120,7 @@ class AlgoMonitor:
     except FileNotFoundError:
       self.log("Config file not found.", "ERROR")
     except json.JSONDecodeError as e:
-      self.log("Config file content.", "ERROR")
-      print(e)
+      self.log(f"Config file content: {e}.", "ERROR")
     exit()
 
   def save_config(self):
@@ -141,20 +137,24 @@ class AlgoMonitor:
       except (psutil.NoSuchProcess, psutil.AccessDenied):
         continue
 
-    # Get initial port list
-    self.known_ports = set(get_open_ports())
+    # Get the initial port list
+    # self.known_ports = set(get_open_ports())
 
     # Get initial network connections
-    for conn in psutil.net_connections(kind='inet'):
-      if conn.status == 'ESTABLISHED':
-        self.known_connections.add((conn.laddr.ip, conn.laddr.port, conn.raddr.ip, conn.raddr.port))
+    # for conn in psutil.net_connections(kind='inet'):
+    #   if conn.status == 'ESTABLISHED':
+    #     self.known_connections.add((conn.laddr.ip, conn.laddr.port, conn.raddr.ip, conn.raddr.port))
 
-    # Mark whitelist as established after initial scan
+    # Mark whitelist as established after the initial scan
     self.whitelist_established = True
 
   def log(self, message, level="INFO", pid=None):
     """Handle alerts, notifications, and log messages with rotation and retention"""
     time_now = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    level = level.upper()
+
+    if level not in self.config['LOG_LEVELS']:
+      return
 
     # Log the alert
     log_file = os.path.join(LOG_DIR, f"{level.lower()}.log")
@@ -179,14 +179,15 @@ class AlgoMonitor:
     # Clean up old logs
     self.cleanup_logs()
 
-  def cleanup_logs(self):
+  @staticmethod
+  def cleanup_logs():
     """Remove logs older than retention period"""
     now = time.time()
     for filename in os.listdir(LOG_DIR):
       filepath = os.path.join(LOG_DIR, filename)
       if os.path.isfile(filepath):
         file_age = now - os.path.getmtime(filepath)
-        if file_age > LOG_RETENTION_DAYS * 24 * 60 * 60:
+        if file_age > LOG_RETENTION_DAYS:
           os.remove(filepath)
 
   def is_process_trusted(self, proc_info):
@@ -196,14 +197,15 @@ class AlgoMonitor:
     username = proc_info.get('username', '')
 
     # Kernel threads are always trusted
-    if not cmdline and username == 'root' and any(name.startswith(k) for k in ['kworker', 'kthreadd', 'ksoftirqd']):
+    if ((not cmdline and username == 'root' and any(name.startswith(k) for k in ['kworker', 'kthreadd', 'ksoftirqd']))
+        or any(name.startswith(k) for k in ['panel-'])):
       return True
 
     # Check against trusted processes
-    if name in self.trusted_processes:
+    if name in self.config['TRUSTED_SYSTEM_PROCESSES']:
       return True
 
-    # Check if process path is in standard system directories
+    # Check if the process path is in standard system directories
     try:
       proc = psutil.Process(proc_info['pid'])
       exe_path = proc.exe()
@@ -218,10 +220,10 @@ class AlgoMonitor:
     """Check if a process shows suspicious characteristics"""
     name = proc_info.get('name', '')
     cmdline = ' '.join(proc_info.get('cmdline') or [])
-    username = proc_info.get('username', '')
+    suspicious_patterns = [re.compile(p, re.IGNORECASE) for p in self.config['SUSPICIOUS_PATTERNS']]
 
     # Check for suspicious patterns in name or command line
-    if any(pattern.search(name) or pattern.search(cmdline) for pattern in self.suspicious_patterns):
+    if any(pattern.search(name) or pattern.search(cmdline) for pattern in suspicious_patterns):
       return True
 
     # Check for processes running from unusual locations
@@ -232,9 +234,8 @@ class AlgoMonitor:
         return True
       if not any(exe_path.startswith(path) for path in ['/bin/', '/sbin/', '/usr/bin/', '/usr/sbin/', '/opt/']):
         return True
-    except (psutil.NoSuchProcess, psutil.AccessDenied):
+    except psutil.NoSuchProcess:
       pass
-    print('false: ', name)
     return False
 
   def monitor_processes(self):
@@ -256,7 +257,10 @@ class AlgoMonitor:
           # Check process behavior
           self.check_process_behavior(proc.info)
 
-        except (psutil.NoSuchProcess, psutil.AccessDenied):
+        except psutil.AccessDenied:
+          self.log(f"Access denied to process (PID:{proc.info['pid']}) - insufficient permissions",
+                   "WARNING")
+        except psutil.NoSuchProcess:
           continue
 
       # Update known processes
@@ -273,49 +277,47 @@ class AlgoMonitor:
 
     # Skip if we're still establishing the whitelist
     if not self.whitelist_established:
-      self.log(f"Skipping new process detection: {name} (PID: {pid})")
-      return
+      return self.log(f"Skipping new process detection: {name} (PID: {pid}) by {username} - CMD: {cmdline}")
 
     if self.is_process_trusted(proc_info):
-      self.log(f"Trusted process detected: {name} (PID: {pid}) - CMD: {cmdline}")
-      return
+      return self.log(f"Trusted process detected: {name} (PID: {pid}) by {username} - CMD: {cmdline}")
 
     # Check for reverse shell characteristics
     if self.detect_reverse_shell(proc_info):
-      self.log(f"Potential reverse shell detected: {name} (PID: {pid})", "ALERT", pid)
-      try:
-        p = psutil.Process(pid)
-        p.terminate()
-        self.log(f"Terminated potential reverse shell: {name} (PID: {pid})", "INFO", pid)
-      except psutil.NoSuchProcess:
-        self.log(f"Reverse shell does not exist: {name} (PID: {pid})", "INFO", pid)
-      except psutil.AccessDenied:
-        self.log(f"Access denied to reverse shell: {name} (PID: {pid})", "ALERT", pid)
-      return
+      self.log(f"Potential reverse shell detected: {name} (PID: {pid}) by {username} - CMD: {cmdline}",
+               "ALERT", pid)
+      return self.terminate_process(pid, name, username, cmdline)
 
-    # Check if process is suspicious
+    # Check if the process is suspicious
     if self.is_process_suspicious(proc_info):
-      self.log(f"Suspicious process detected: {name} (PID: {pid}) - CMD: {cmdline}", "WARNING", pid)
-      try:
-        p = psutil.Process(pid)
-        p.terminate()
-        self.log(f"Terminated suspicious process: {name} (PID: {pid})", "INFO", pid)
-      except psutil.NoSuchProcess:
-        self.log(f"Suspicious process does not exist: {name} (PID: {pid})", "INFO", pid)
-      except psutil.AccessDenied:
-        self.log(f"Access denied to suspicious process: {name} (PID: {pid})", "ALERT", pid)
-      return
+      self.log(f"Suspicious process detected: {name} (PID: {pid}) by {username} - CMD: {cmdline}",
+               "WARNING", pid)
+      return self.terminate_process(pid, name, username, cmdline)
 
-    self.log(f"Unknown process detected: {name} (PID: {pid}) by {username} - CMD: {cmdline}", "WARNING")
+    return self.log(f"Unknown process detected: {name} (PID: {pid}) by {username} - CMD: {cmdline}",
+                    "WARNING")
 
+  def terminate_process(self, pid, name, username, cmdline=None):
+    try:
+      p = psutil.Process(pid)
+      p.terminate()
+      msg = "Terminated process"
+      lvl = "INFO"
+    except psutil.NoSuchProcess:
+      msg = "Process does not exist"
+      lvl = "INFO"
+    except psutil.AccessDenied:
+      msg = "Access denied to process"
+      lvl = "ALERT"
+
+    self.log(f"{msg}: {name} (PID: {pid}) by {username}" + (f" - CMD: {cmdline}" if cmdline else ""), lvl, pid)
 
   def detect_reverse_shell(self, proc_info):
     """Detect potential reverse shell characteristics"""
     cmdline = ' '.join(proc_info.get('cmdline') or [])
-    name = proc_info.get('name', '')
 
-    # Check command line for indicators
-    if any(re.search(pattern, cmdline, re.IGNORECASE) for pattern in self.reverse_shell_indicators):
+    # Check the command line for indicators
+    if any(re.search(pattern, cmdline, re.IGNORECASE) for pattern in self.config['REVERSE_SHELL_INDICATORS']):
       return True
 
     # Check for network connections with suspicious patterns
@@ -323,8 +325,8 @@ class AlgoMonitor:
       proc = psutil.Process(proc_info['pid'])
       for conn in proc.connections():
         if conn.status == 'ESTABLISHED':
-          raddr = conn.raddr
-          if raddr and any(pattern.search(raddr.ip) for pattern in self.suspicious_network_patterns):
+          radar = conn.raddr
+          if radar and any(pattern.search(radar.ip) for pattern in self.suspicious_network_patterns):
             return True
     except (psutil.NoSuchProcess, psutil.AccessDenied):
       pass
@@ -345,7 +347,7 @@ class AlgoMonitor:
       'file_handles': proc_info['num_fds']
     }
 
-    # Add to behavior history (keep last 10 samples)
+    # Add to the behavior history (keep last 10 samples)
     self.process_behavior[pid].append(behavior)
     if len(self.process_behavior[pid]) > 10:
       self.process_behavior[pid].popleft()
@@ -370,7 +372,6 @@ class AlgoMonitor:
     if thresholds:
       self.log(f"Anomalous behavior detected in {name} (PID: {pid}): " + ', '.join(thresholds), "WARNING")
 
-
   def monitor_network(self):
     """Monitor network connections and traffic"""
     while self.running:
@@ -391,9 +392,10 @@ class AlgoMonitor:
 
   def check_new_port(self, port):
     """Check newly opened ports"""
-    if port not in self.trusted_ports:
+    if port not in self.config['TRUSTED_PORTS'].keys():
       # Try to identify the process using the port
       proc_name = "unknown"
+      proc_username = "unknown"
       proc_pid = None
       for conn in psutil.net_connections(kind='inet'):
         if conn.laddr.port == port and conn.status == 'LISTEN':
@@ -401,11 +403,16 @@ class AlgoMonitor:
             proc = psutil.Process(conn.pid)
             proc_pid = conn.pid
             proc_name = proc.name()
+            proc_username = proc.username()
+            if proc_name in self.config["TRUSTED_SYSTEM_PROCESSES"]:
+              return
           except (psutil.NoSuchProcess, psutil.AccessDenied):
             pass
           break
 
       self.log(f"Unauthorized port opened: {port} by {proc_name}", "ALERT", proc_pid)
+      if proc_pid:
+        self.terminate_process(proc_pid, proc_name, proc_username)
 
   def check_connections(self):
     """Check network connections for suspicious activity"""
@@ -428,28 +435,38 @@ class AlgoMonitor:
     try:
       proc = psutil.Process(conn.pid)
       proc_name = proc.name()
+      username = proc.username()
       proc_cmd = ' '.join(proc.cmdline())
     except (psutil.NoSuchProcess, psutil.AccessDenied):
       proc_name = "unknown"
       proc_cmd = "unknown"
+      username = "unknown"
 
     remote_ip = conn.raddr.ip
     remote_port = conn.raddr.port
 
+    # Skip Google DNS
     if remote_ip in ["8.8.8.8", "8.8.4.4", "2001:4860:4860::8888"]:
-      return  # Skip Google DNS
+      return None
 
     # Check for suspicious remote IPs or ports
     if any(pattern.search(remote_ip) for pattern in self.suspicious_network_patterns):
       self.log(f"Suspicious outgoing connection from {proc_name} (PID: {conn.pid}) "
                f"to {remote_ip}:{remote_port}, Command: {proc_cmd}", "ALERT", conn.pid)
-      return
+      return self.terminate_process(conn.pid, proc_name, username, proc_cmd)
 
     # Check for connections to non-standard ports
-    if not remote_ip.startswith(('192.168.', '10.', '172.16.')) and remote_ip != '127.0.0.1':
-      if remote_port not in self.trusted_ports:
-        self.log(f"Outgoing connection to non-standard port from {proc_name} (PID: {conn.pid}) "
-                 f"to {remote_ip}:{remote_port}, Command: {proc_cmd}", "WARNING")
+    if (not remote_ip.startswith(('192.168.', '10.', '172.16.'))
+        and remote_ip != '127.0.0.1'
+        and remote_port not in self.config['TRUSTED_PORTS'].keys()
+        and proc_name not in self.config["TRUSTED_SYSTEM_PROCESSES"]):
+
+      self.log(f"Outgoing connection to non-standard port from {proc_name} (PID: {conn.pid}) "
+               f"to {remote_ip}:{remote_port}, Command: {proc_cmd}", "WARNING", conn.pid)
+      return self.terminate_process(conn.pid, proc_name, username, proc_cmd)
+    else:
+      return self.log(f"Outgoing connection from {proc_name} (PID: {conn.pid}) "
+                      f"to {remote_ip}:{remote_port}, Command: {proc_cmd}")
 
   def monitor_filesystem(self):
     """Monitor protected directories for changes"""
@@ -467,16 +484,17 @@ class AlgoMonitor:
     """Check for file modifications or suspicious changes"""
     try:
       # Get file stats
-      stat = os.stat(filepath)
+      # stat = os.stat(filepath)
 
       # Check for suspicious file permissions
-      # if stat.st_mode & 0o7777 != 0o755 and stat.st_mode & 0o7777 != 0o644:
+      # if (stat.st_mode & 0o7777 != 0o755 and stat.st_mode & 0o7777 != 0o644
+      #     and filepath not in self.config["TRUSTED_DIRECTORIES"]):
       #   self.log(f"File with unusual permissions: {filepath} ({oct(stat.st_mode & 0o7777)})", "WARNING")
 
       # Calculate file hash
       current_hash = self.calculate_file_hash(filepath)
 
-      # Check if file has changed
+      # Check if the file has changed
       if filepath in self.file_hashes:
         if self.file_hashes[filepath] != current_hash:
           self.log(f"File modified: {filepath}", "WARNING")
@@ -484,7 +502,9 @@ class AlgoMonitor:
       else:
         self.file_hashes[filepath] = current_hash
 
-    except (PermissionError, FileNotFoundError):
+    except PermissionError:
+      self.log(f"Permission denied to read file: {filepath}", "WARNING")
+    except FileNotFoundError:
       pass
 
   def calculate_file_hash(self, filepath):
@@ -499,7 +519,11 @@ class AlgoMonitor:
           sha256.update(data)
       return sha256.hexdigest()
     except (PermissionError, FileNotFoundError):
-      return ""
+      pass
+    except Exception as e:
+      self.log(f"Error calculating file hash: {e}", "ERROR")
+    return ""
+
 
   def monitor_user_activity(self):
     """Monitor user logins and activity"""
@@ -507,7 +531,7 @@ class AlgoMonitor:
     while self.running:
       current_users = set()
 
-      # Get current logged in users
+      # Get current logged-in users
       for user in psutil.users():
         current_users.add((user.name, user.host, user.terminal))
 
@@ -562,20 +586,18 @@ def get_open_ports():
 
 def main():
   try:
-    if get_user_permission() == 0:
-      global monitor
-      make_banner('AlgoMonitor')
-      monitor = AlgoMonitor()
-      atexit.register(monitor.stop)
-      monitor.start()
-    else:
-      print(red + '[-] Permission denied')
+    make_banner('AlgoMonitor')
+    monitor = SystemMonitor()
+    atexit.register(monitor.stop)
+    monitor.start()
   except KeyboardInterrupt:
     pass
-  # except Exception as e:
-  #   print(red + f'[-] Exception: {e}')
+  except Exception as e:
+    print(red + f'[-] Exception: {e}')
 
 
 if __name__ == '__main__':
-  global monitor
-  main()
+  if get_user_permission() == 0:
+    main()
+  else:
+    print(red + '[-] Permission denied')

@@ -103,16 +103,22 @@ main() {
 [Unit]
 Description=AlgoMonitor Security Service
 After=network.target
-StartLimitIntervalSec=60
+StartLimitIntervalSec=10
 StartLimitBurst=5
 
 [Service]
 Type=simple
 User=root
 WorkingDirectory=$INSTALL_DIR
+Environment="DISPLAY=$(echo $DISPLAY)"
+Environment="XAUTHORITY=/home/$(whoami)/.Xauthority"
+Environment="DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/$(id -u)/bus"
+ExecStartPre=/usr/bin/xhost +SI:localuser:root
 ExecStart=/usr/bin/python3 $INSTALL_DIR/${SERVICE_NAME}.py
 Restart=always
 RestartSec=5
+
+# Security options
 NoNewPrivileges=true
 PrivateTmp=true
 ProtectSystem=full

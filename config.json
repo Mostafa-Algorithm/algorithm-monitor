@@ -44,7 +44,7 @@
     "whatsapp-linux-desktop", "whatsapp-desktop-client", "whatsapp-linux-app",
 
     "python", "python3", "node", "npm", "java", "ruby", "perl", "php",
-    "gcc", "g++", "make", "cmake", "gdb", "lldb",
+    "gcc", "g++", "make", "cmake", "gdb", "lldb", "git-remote-https",
 
     "dockerd", "containerd", "libvirtd", "virt-manager", "qemu",
     "vboxwebsrv", "lxc", "lxd", "podman", "buildah",

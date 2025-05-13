@@ -171,6 +171,11 @@ sudo cat /opt/.monitor/logs/alert.log
 | ALERT     | Immediate security threat            | Reverse shell, Cryptominer detected  |
 | ERROR     | System/Service errors                | Permission denied, Resource limits   |
 
+### You can update logging from ```/opt/.monitor/config.json``` file:
+ ```json
+ "LOG_LEVELS": ["ALERT", "INFO", "WARNING", "ERROR"]
+ ```
+
 ## Troubleshooting Guide
 
 ### Common Issues and Solutions
@@ -223,9 +228,9 @@ sudo ./uninstall
 1. Edit ```/opt/.monitor/config.json```
 2. Add to appropriate whitelist arrays
 3. Restart service:
-```bash
-sudo systemctl restart algo-monitor
-```
+  ```bash
+  sudo systemctl restart algo-monitor
+  ```
 
 ## Development Credits
 

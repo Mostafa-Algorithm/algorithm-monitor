@@ -16,53 +16,110 @@
     "27017": "MongoDB"
   },
   "TRUSTED_SYSTEM_PROCESSES": [
-    "systemd", "init", "kthreadd", "ksoftirqd", "rcu_sched", "migration", "watchdog", "kworke", "kcompactd",
-    "kswapd", "oom_reape", "khugepaged", "dbus-daemon", "NetworkManage", "avahi-daemon", "cron", "syslog-ng",
-    "rsyslogd", "systemd-logind", "systemd-udevd", "polkitd", "accounts-daemon", "sshd", "fail2ban", "firewalld",
-    "ufw", "gpg-agent", "pcscd", "acpid", "lm-sensors", "smartd", "upowerd", "thermald", "irqbalance", "ntpd",
-    "wpa_supplicant", "dhclient", "dnsmasq", "hostapd", "chronyd", "openvpn", "nordvpnd", "openconnect", "github-desktop",
-    "wireguard", "udisksd", "lvmetad", "lvm2-monito", "mdadm", "fstrim", "pulseaudio", "pipewire", "wireplumbe",
-    "alsa", "gdm", "gdm3", "lightdm", "sddm", "xdm", "slim", "gnome-shell", "xfce4", "xfwm4", "xfdesktop", "kwin_x11",
-    "xfsettingsd", "kwin_wayland", "mate-session", "cinnamon-session", "budgie-wm", "firefox", "chrome", "chromium",
-    "brave", "thunderbird", "libreoffice", "vlc", "spotify", "code", "pycharm", "terminato", "gedit", "sublime_text",
-    "apt", "apt-get", "dpkg", "yum", "dnf", "pacman", "zyppe", "snapd", "flatpak", "gnome-software", "dnf-automatic",
-    "dockerd", "containerd", "libvirtd", "virt-manage", "qemu", "vboxwebsrv", "git", "python", "python3", "tcsh",
-    "node", "npm", "java", "ruby", "perl", "bash", "zsh", "fish", "sh", "dash", "postgres", "mysqld", "mongod",
-    "whatsapp-linux-desktop"
+    "systemd", "init", "upstart", "runit", "openrc",
+    "kthreadd", "ksoftirqd", "rcu_sched", "migration", "watchdog",
+    "kworker", "kcompactd", "kswapd", "oom_reaper", "khugepaged",
+
+    "acpid", "lm-sensors", "smartd", "thermald", "irqbalance",
+    "udisksd", "udisksd2", "upowerd", "pcscd", "cupsd", "alsa",
+    "pulseaudio", "pipewire", "wireplumber", "modprobe", "kmod",
+
+    "NetworkManager", "wpa_supplicant", "dhclient", "avahi-daemon",
+    "chronyd", "ntpd", "systemd-networkd", "networkd-dispatcher",
+    "dnsmasq", "hostapd", "openvpn", "strongswan", "openssh",
+
+    "polkitd", "accounts-daemon", "sshd", "fail2ban", "apparmor",
+    "selinux", "firewalld", "ufw", "gpg-agent", "gnome-keyring",
+
+    "apt", "apt-get", "dpkg", "yum", "dnf", "pacman", "zypper",
+    "emerge", "rpm", "snapd", "flatpak", "packagekitd", "abrtd",
+
+    "gdm", "gnome-shell", "kwin_x11", "kwin_wayland", "xfce4-session",
+    "xfwm4", "xfdesktop", "xfsettingsd", "mate-session", "cinnamon-session",
+    "budgie-wm", "deepin-session", "lxqt-session", "plasma", "lightdm",
+    "sddm", "xorg", "Xwayland", "xfce4-notifyd",
+
+    "brave", "firefox", "chrome", "chromium", "thunderbird", "libreoffice", "skype",
+    "vlc", "code", "pycharm", "github-desktop", "spotify", "slack", "discord", "zoom",
+    "whatsapp-linux-desktop", "whatsapp-desktop-client", "whatsapp-linux-app",
+
+    "python", "python3", "node", "npm", "java", "ruby", "perl", "php",
+    "gcc", "g++", "make", "cmake", "gdb", "lldb",
+
+    "dockerd", "containerd", "libvirtd", "virt-manager", "qemu",
+    "vboxwebsrv", "lxc", "lxd", "podman", "buildah",
+
+    "gvfsd", "tracker-extract", "tracker-miner-fs", "smbd", "nmbd",
+    "nfsd", "rpcbind", "lvmetad", "lvm2-monitor", "mdadm", "fstrim",
+
+    "cron", "anacron", "atd", "syslog-ng", "rsyslogd", "journald",
+    "dbus-daemon", "systemd-logind", "systemd-udevd", "systemd-timesyncd",
+
+    "colord", "geoclue", "power-profiles-daemon", "thermald", "irqbalance",
+    "panel-5-systray", "panel-19-whiske", "panel-7-places",
+
+    "cupsd", "cups-browsed", "ippusbxd",
+
+    "usbmuxd", "modemmanager", "ofono",
+
+    "bluetoothd", "bluez", "obexd",
+
+    "ibus-daemon", "fcitx", "xim", "uim",
+
+    "fontconfig", "fonts-daemon", "xfs"
   ],
   "PROTECTED_DIRECTORIES": [
-    "/bin/", "/sbin/", "/usr/bin/", "/usr/sbin/", "/usr/local/bin/", "/etc/", "/root/", "/var/log/", "/opt/",
-    "/boot/", "/lib/", "/lib64/", "/usr/lib/", "/usr/lib64/", "/usr/local/lib/", "/usr/local/lib64/", "/usr/share/",
-    "/usr/local/share/", "/var/lib/", "/var/www/", "/home/*/.ssh/", "/home/*/.gnupg/", "/home/*/.config/"
+    "/bin/", "/sbin/", "/usr/bin/", "/usr/sbin/", "/usr/local/bin/",
+    "/etc/", "/root/", "/var/log/", "/opt/", "/boot/", "/lib/", "/lib64/",
+    "/usr/lib/", "/usr/lib64/", "/usr/local/lib/", "/usr/local/lib64/",
+    "/usr/share/", "/usr/local/share/", "/var/lib/", "/var/www/",
+    "/home/*/.ssh/", "/home/*/.gnupg/", "/home/*/.config/", "/snap/",
+    "/tmp/.mount_*/", "/usr/libexec/", "/usr/lib/x86_64-linux-gnu/xfce4/xfconf/"
+  ],
+  "TRUSTED_DIRECTORIES": [
+    "/var/lib/snapd/", "/usr/lib/", "/lib/cups/"
   ],
   "PROCESS_THRESHOLDS": {
-    "cpu_percent": 80,
-    "memory_percent": 70,
-    "children": 15,
-    "connections": 25,
-    "file_handles": 1000,
-    "threads": 100
+    "cpu_percent": 95,
+    "memory_percent": 85,
+    "children": 50,
+    "connections": 100,
+    "file_handles": 2000,
+    "threads": 1000
+  },
+  "DISTRO_SPECIFIC_ALLOWANCES": {
+    "debian": ["apt-config", "debian-systemd", "debian-apt"],
+    "ubuntu": ["snapd", "update-notifier", "ubuntu-advantage"],
+    "fedora": ["dnf-automatic", "abrtd", "cockpit-ws"],
+    "centos": ["yum", "rhsmcertd", "tuned"],
+    "arch": ["pacman", "aura", "yay", "reflector"],
+    "gentoo": ["emerge", "dispatch-conf", "genlop"],
+    "opensuse": ["zypper", "yast2", "snapper"],
+    "alpine": ["apk", "openrc", "busybox"]
   },
   "SUSPICIOUS_PATTERNS": [
-    "\\.sh$", "\\.py$", "\\.pl$", "\\.rb$", "\\.exe$", "\\.appimage$", "^[0-9a-f]{32}$", "^[0-9a-f]{64}$",
-    "reverse_?shell", "bind_?shell", "meterprete", "backdoo", "mine", "cryptomine", "xmrig", "cpumine", "minerd",
-    "nc\\.?at", "socat", "telnet", "rsh", "rexec", "sshpass", "keylogge", "sniffe", "rootkit", "kworker/\\d+/[0-9a-f]+",
-    "\\.encrypted$", "\\.locked$", "\\.crypt$", "\\.ransom$", "\\.malware$", "\\.trojan$", "\\.virus$", "\\.worm$",
-    "\\/tmp\/[a-z0-9]{10}", "\\/dev\/shm\/[a-z0-9]{10}", "\\/var\/tmp\/[a-z0-9]{10}", "\\/run\/user\/\\d+\/[a-z0-9]{10}"
+    "\\.sh$", "\\.py$", "\\.pl$", "\\.rb$", "\\.exe$", "^[0-9a-f]{32}$", "^[0-9a-f]{64}$",
+    "reverse_?shell", "bind_?shell", "meterpreter", "backdoor", "mine", "cryptomine", "xmrig",
+    "cpumine", "minerd", "nc\\.?at", "socat", "telnet", "rsh", "rexec", "sshpass", "keylogger",
+    "sniffer", "rootkit", "kworker/\\d+/[0-9a-f]+", "\\.encrypted$", "\\.locked$",
+    "\\.crypt$", "\\.ransom$", "\\.malware$", "\\.trojan$", "\\.virus$", "\\.worm$",
+    "\\/tmp\\/[a-z0-9]{10}", "\\/dev\\/shm\\/[a-z0-9]{10}", "\\/var\\/tmp\\/[a-z0-9]{10}",
+    "\\/run\\/user\\/\\d+\\/[a-z0-9]{10}"
   ],
   "SUSPICIOUS_NETWORK_PATTERNS": [
-    "\\.onion$", "^45\\..*", "^62\\..*", "^77\\..*", "^93\\..*", "^192\\.99\\..*", "^185\\.161\\..*",
-    ":4444$", ":5555$", ":6666$", ":7777$", ":8888$", ":9999$", ":1337$", ":31337$", ":12345$", ":54321$",
-    "\\.ddns\\.net$", "\\.no-ip\\.org$", "\\.dyn\\.com$", "^10\\.", "^172\\.(1[6-9]|2[0-9]|3[0-1])\\.", "^192\\.168\\."
+    "\\.onion$", "^45\\..*", "^62\\..*", "^77\\..*", "^93\\..*",
+    "^192\\.99\\..*", "^185\\.161\\..*",
+    ":4444$", ":5555$", ":6666$", ":7777$", ":8888$", ":9999$",
+    ":1337$", ":31337$", ":12345$", ":54321$",
+    "\\.ddns\\.net$", "\\.no-ip\\.org$", "\\.dyn\\.com$", "^10\\.",
+    "^172\\.(1[6-9]|2[0-9]|3[0-1])\\.", "^192\\.168\\."
   ],
   "REVERSE_SHELL_INDICATORS": [
-    "bash -i", "/bin/bash -i", "/bin/sh -i", "python -c", "perl -e", "nc -e /bin/sh", "ncat -e /bin/sh",
-    "socat exec:", "php -", "sh -i", "ruby -rsocket", "lua -e", "rm /tmp/f;mkfifo /tmp/f", "mknod /tmp/backpipe p",
-    "zsh -c", "powershell -nop -c", "awk 'BEGIN {system(\"/bin/sh\")}'", "expect -c 'spawn /bin/sh;interact'",
-    "telnet <IP> <PORT> | /bin/sh", "curl <URL> | sh", "wget -qO- <URL> | sh"
+    "bash -i", "/bin/bash -i", "/bin/sh -i", "python -c", "perl -e", "nc -e /bin/sh",
+    "ncat -e /bin/sh", "socat exec:", "php -", "sh -i", "ruby -rsocket", "lua -e",
+    "rm /tmp/f;mkfifo /tmp/f", "mknod /tmp/backpipe p", "zsh -c", "powershell -nop -c",
+    "awk 'BEGIN {system(\"/bin/sh\")}'", "expect -c 'spawn /bin/sh;interact'",
+    "curl <URL> | sh", "telnet <IP> <PORT> | /bin/sh", "wget -qO- <URL> | sh"
   ],
-  "CRYPTOMINING_POOLS": [
-    "xmrpool.eu", "minexmr.com", "nanopool.org", "supportxmr.com", "monerohash.com", "cryptonight.net",
-    "etn.fairhash.org", "eth-eu1.nanopool.org", "asia1.ethermine.org", "us1.ethermine.org"
-  ]
+  "LOG_LEVELS": ["ALERT", "INFO", "WARNING", "ERROR"]
 }

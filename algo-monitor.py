@@ -457,28 +457,28 @@ class SystemMonitor:
     remote_ip = conn.raddr.ip
     remote_port = conn.raddr.port
 
-    # Skip Google DNS
-    if remote_ip in ["8.8.8.8", "8.8.4.4", "2001:4860:4860::8888"]:
-      return None
+    # Skip Google DNS and trusted processes
+    if (remote_ip in ["8.8.8.8", "8.8.4.4", "2001:4860:4860::8888"]
+        or proc_name in self.config["TRUSTED_SYSTEM_PROCESSES"]):
+      return self.log(f"Outgoing connection from {proc_name} (PID: {conn.pid}) "
+                      f"to {remote_ip}:{remote_port}, Command: {proc_cmd}")
 
     # Check for suspicious remote IPs or ports
     if any(pattern.search(remote_ip) for pattern in self.suspicious_network_patterns):
       self.log(f"Suspicious outgoing connection from {proc_name} (PID: {conn.pid}) "
                f"to {remote_ip}:{remote_port}, Command: {proc_cmd}", "ALERT", conn.pid)
-      return self.terminate_process("outgoing connection", conn.pid, proc_name, username, proc_cmd)
+      return self.terminate_process("suspicious outgoing connection", conn.pid, proc_name, username, proc_cmd)
 
     # Check for connections to non-standard ports
-    if (not remote_ip.startswith(('192.168.', '10.', '172.16.'))
-        and remote_ip != '127.0.0.1'
-        and remote_port not in self.config['TRUSTED_PORTS'].keys()
-        and proc_name not in self.config["TRUSTED_SYSTEM_PROCESSES"]):
-
+    if (remote_ip != '127.0.0.1' and not remote_ip.startswith(('192.168.', '10.', '172.16.'))
+        and remote_port not in self.config['TRUSTED_PORTS'].keys()):
       self.log(f"Outgoing connection to non-standard port from {proc_name} (PID: {conn.pid}) "
                f"to {remote_ip}:{remote_port}, Command: {proc_cmd}", "WARNING", conn.pid)
-      return self.terminate_process("outgoing connection", conn.pid, proc_name, username, proc_cmd)
-    else:
-      return self.log(f"Outgoing connection from {proc_name} (PID: {conn.pid}) "
-                      f"to {remote_ip}:{remote_port}, Command: {proc_cmd}")
+      return self.terminate_process("outgoing connection", conn.pid, proc_name, username,
+                                    proc_cmd, (remote_ip, remote_port))
+
+    return self.log(f"Outgoing connection from {proc_name} (PID: {conn.pid}) "
+                    f"to {remote_ip}:{remote_port}, Command: {proc_cmd}")
 
   def monitor_filesystem(self):
     """Monitor protected directories for changes"""

@@ -44,7 +44,7 @@
     "whatsapp-linux-desktop", "whatsapp-desktop-client", "whatsapp-linux-app",
 
     "python", "python3", "node", "npm", "java", "ruby", "perl", "php", "gcc", "g++",
-    "make", "cmake", "gdb", "lldb", "git", "git-remote-https", "git-remote-ssh",
+    "make", "cmake", "gdb", "lldb", "git", "git-remote-https", "git-remote-ssh", "esbuild",
 
     "dockerd", "containerd", "libvirtd", "virt-manager", "qemu",
     "vboxwebsrv", "lxc", "lxd", "podman", "buildah",
@@ -56,17 +56,22 @@
     "dbus-daemon", "systemd-logind", "systemd-udevd", "systemd-timesyncd",
 
     "colord", "geoclue", "power-profiles-daemon", "thermald", "irqbalance",
-    "panel-5-systray", "panel-19-whiske", "panel-7-places",
 
     "cupsd", "cups-browsed", "ippusbxd",
 
     "usbmuxd", "modemmanager", "ofono",
 
-    "bluetoothd", "bluez", "obexd",
+    "bluetoothd", "bluez", "obexd", "mysqld",
 
     "ibus-daemon", "fcitx", "xim", "uim",
 
     "fontconfig", "fonts-daemon", "xfs"
+  ],
+  "TRUSTED_SYSTEM_PATTERNS": [
+    "kworker/", "kthreadd/", "ksoftirqd/"
+  ],
+  "TRUSTED_USERS_PATTERNS": [
+    "panel-", "ng ", "npm "
   ],
   "PROTECTED_DIRECTORIES": [
     "/bin/", "/sbin/", "/usr/bin/", "/usr/sbin/", "/usr/local/bin/",

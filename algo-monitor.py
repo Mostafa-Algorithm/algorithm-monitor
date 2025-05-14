@@ -197,8 +197,11 @@ class SystemMonitor:
     username = proc_info.get('username', '')
 
     # Kernel threads are always trusted
-    if ((not cmdline and username == 'root' and any(name.startswith(k) for k in ['kworker', 'kthreadd', 'ksoftirqd']))
-        or any(name.startswith(k) for k in ['panel-'])):
+    if not cmdline and username == 'root' and any(name.startswith(k) for k in self.config['TRUSTED_SYSTEM_PATTERNS']):
+      return True
+
+    # Truster user actions
+    if any(name.startswith(k) for k in self.config['TRUSTED_USERS_PATTERNS']):
       return True
 
     # Check against trusted processes
@@ -209,7 +212,7 @@ class SystemMonitor:
     try:
       proc = psutil.Process(proc_info['pid'])
       exe_path = proc.exe()
-      if any(exe_path.startswith(path) for path in ['/bin/', '/sbin/', '/usr/bin/', '/usr/sbin/', '/lib/', '/lib64/']):
+      if any(exe_path.startswith(path) for path in self.config['PROTECTED_DIRECTORIES']):
         return True
     except (psutil.NoSuchProcess, psutil.AccessDenied):
       pass
@@ -286,31 +289,34 @@ class SystemMonitor:
     if self.detect_reverse_shell(proc_info):
       self.log(f"Potential reverse shell detected: {name} (PID: {pid}) by {username} - CMD: {cmdline}",
                "ALERT", pid)
-      return self.terminate_process(pid, name, username, cmdline)
+      return self.terminate_process("reverse shell", pid, name, username, cmdline)
 
     # Check if the process is suspicious
     if self.is_process_suspicious(proc_info):
       self.log(f"Suspicious process detected: {name} (PID: {pid}) by {username} - CMD: {cmdline}",
                "WARNING", pid)
-      return self.terminate_process(pid, name, username, cmdline)
+      return self.terminate_process("suspicious process", pid, name, username, cmdline)
 
     return self.log(f"Unknown process detected: {name} (PID: {pid}) by {username} - CMD: {cmdline}",
                     "WARNING")
 
-  def terminate_process(self, pid, name, username, cmdline=None):
+  def terminate_process(self, msg, pid, name, username, cmdline=None,
+                        connection: tuple[str, int] | None = None):
     try:
       p = psutil.Process(pid)
       p.terminate()
-      msg = "Terminated process"
+      msg = f"Terminated {msg.lower()} process"
       lvl = "INFO"
     except psutil.NoSuchProcess:
-      msg = "Process does not exist"
+      msg = f"{msg.title()} process does not exist"
       lvl = "INFO"
     except psutil.AccessDenied:
-      msg = "Access denied to process"
+      msg = f"Access denied to {msg.lower()} process"
       lvl = "ALERT"
 
-    self.log(f"{msg}: {name} (PID: {pid}) by {username}" + (f" - CMD: {cmdline}" if cmdline else ""), lvl, pid)
+    self.log(f"{msg}: {name} (PID: {pid}) by {username}"
+             + (f" - [{connection[0]}:{connection[1]}]" if connection else "")
+             + (f" - CMD: {cmdline}" if cmdline else ""), lvl, pid)
 
   def detect_reverse_shell(self, proc_info):
     """Detect potential reverse shell characteristics"""
@@ -392,27 +398,33 @@ class SystemMonitor:
 
   def check_new_port(self, port):
     """Check newly opened ports"""
+    proc_info = None
+    connection = None
     if port not in self.config['TRUSTED_PORTS'].keys():
       # Try to identify the process using the port
-      proc_name = "unknown"
-      proc_username = "unknown"
-      proc_pid = None
       for conn in psutil.net_connections(kind='inet'):
         if conn.laddr.port == port and conn.status == 'LISTEN':
           try:
             proc = psutil.Process(conn.pid)
-            proc_pid = conn.pid
-            proc_name = proc.name()
-            proc_username = proc.username()
-            if proc_name in self.config["TRUSTED_SYSTEM_PROCESSES"]:
+            proc_info = {
+              "pid": proc.pid,
+              "name": proc.name() or "unknown",
+              "username": proc.username() or "unknown",
+              "cmdline": proc.cmdline() or None
+            }
+            connection = (conn.laddr.ip, conn.laddr.port)
+            if self.is_process_trusted(proc_info):
               return
           except (psutil.NoSuchProcess, psutil.AccessDenied):
             pass
           break
 
-      self.log(f"Unauthorized port opened: {port} by {proc_name}", "ALERT", proc_pid)
-      if proc_pid:
-        self.terminate_process(proc_pid, proc_name, proc_username)
+      self.log(f"Unauthorized port opened: {connection} by {proc_info['username']}",
+               "ALERT", proc_info['pid'])
+
+      if proc_info:
+        self.terminate_process("unauthorized port", proc_info['pid'], proc_info['name'],
+                               proc_info['username'], proc_info['cmdline'], connection)
 
   def check_connections(self):
     """Check network connections for suspicious activity"""
@@ -453,7 +465,7 @@ class SystemMonitor:
     if any(pattern.search(remote_ip) for pattern in self.suspicious_network_patterns):
       self.log(f"Suspicious outgoing connection from {proc_name} (PID: {conn.pid}) "
                f"to {remote_ip}:{remote_port}, Command: {proc_cmd}", "ALERT", conn.pid)
-      return self.terminate_process(conn.pid, proc_name, username, proc_cmd)
+      return self.terminate_process("outgoing connection", conn.pid, proc_name, username, proc_cmd)
 
     # Check for connections to non-standard ports
     if (not remote_ip.startswith(('192.168.', '10.', '172.16.'))
@@ -463,7 +475,7 @@ class SystemMonitor:
 
       self.log(f"Outgoing connection to non-standard port from {proc_name} (PID: {conn.pid}) "
                f"to {remote_ip}:{remote_port}, Command: {proc_cmd}", "WARNING", conn.pid)
-      return self.terminate_process(conn.pid, proc_name, username, proc_cmd)
+      return self.terminate_process("outgoing connection", conn.pid, proc_name, username, proc_cmd)
     else:
       return self.log(f"Outgoing connection from {proc_name} (PID: {conn.pid}) "
                       f"to {remote_ip}:{remote_port}, Command: {proc_cmd}")
@@ -523,7 +535,6 @@ class SystemMonitor:
     except Exception as e:
       self.log(f"Error calculating file hash: {e}", "ERROR")
     return ""
-
 
   def monitor_user_activity(self):
     """Monitor user logins and activity"""

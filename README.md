@@ -196,9 +196,6 @@ sudo cat /opt/.monitor/logs/alert.log
      journalctl -u algo-monitor -b --no-pager
      systemctl status algo-monitor
      ```
-   - *Common Fixes*:
-     - Verify Python dependencies: `pip3 install -r requirements.txt`
-     - Check config.json validity: `python3 -m json.tool /opt/.monitor/config.json`
 
 3. **High System Resource Usage**
    - *Adjustments*:

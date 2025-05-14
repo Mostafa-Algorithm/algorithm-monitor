@@ -1,0 +1,9 @@
+psutil
+atexit
+re
+json
+hashlib
+threading
+time
+notify2
+git+https://github.com/Mostafa-Algorithm/algorithm-lib.git
